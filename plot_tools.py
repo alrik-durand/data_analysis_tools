@@ -3,7 +3,7 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import module.data as dat
+import data_analysis_tools.data as dat
 import pandas as pd
 
 
