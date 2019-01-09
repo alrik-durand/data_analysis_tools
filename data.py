@@ -4,6 +4,53 @@ import numpy as np
 import pandas as pd
 
 
+def get_all_files_with(search_str='', folder=None, file_format='', print_info=False):
+    """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
+
+    @param string search_str: the string to search in the file name and filepath
+
+    @param string folder: the folder to search into
+
+    @param string file_format: by default return all the file format, or else specify the format like 'dat' or '.dat'
+
+    @return list : the list of all files found, with full filepath.
+
+    """
+
+    if folder == None:
+        search_dir = '.'
+    else:
+        search_dir = folder
+
+    valid_files = []
+
+    if len(file_format) == 0:
+        for (dirpath, dirnames, files) in os.walk(search_dir):
+            for name in files:
+                if (search_str in name):
+                    valid_files.append(os.path.join(dirpath, name))
+            for dirname in dirnames:
+                if search_str in dirname:
+                    for name in os.listdir(os.path.join(dirpath, dirname)):
+                        valid_files.append(os.path.join(dirpath, dirname, name))
+    else:
+        m = -len(file_format)
+        for (dirpath, dirnames, files) in os.walk(search_dir):
+            for name in files:
+                if (search_str in name) & (name[m:] == file_format):
+                    valid_files.append(os.path.join(dirpath, name))
+            for dirname in dirnames:
+                if search_str in dirname:
+                    for name in os.listdir(os.path.join(dirpath, dirname)):
+                        if (name[m:] == file_format):
+                            valid_files.append(os.path.join(dirpath, dirname, name))
+
+    if print_info:
+        print(len(valid_files), 'file(s) found.')
+
+    return valid_files
+
+
 def read_data_file(filename):
     """ Read a Qudi data file and return the data parsed
 
