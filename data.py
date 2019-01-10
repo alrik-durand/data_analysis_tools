@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def get_all_files_with(search_str='', folder=None, file_format='', print_info=False):
+def get_all_data_files(search_str='', folder=None, file_format='', print_info=False):
     """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
 
     @param string search_str: the string to search in the file name and filepath
@@ -13,7 +13,9 @@ def get_all_files_with(search_str='', folder=None, file_format='', print_info=Fa
 
     @param string file_format: by default return all the file format, or else specify the format like 'dat' or '.dat'
 
-    @return list : the list of all files found, with full filepath.
+    @param string print_info: print the number of found files if true
+
+    @return list : the list of all files found, with full filepath
 
     """
 
@@ -44,11 +46,58 @@ def get_all_files_with(search_str='', folder=None, file_format='', print_info=Fa
                     for name in os.listdir(os.path.join(dirpath, dirname)):
                         if (name[m:] == file_format):
                             valid_files.append(os.path.join(dirpath, dirname, name))
-
     if print_info:
         print(len(valid_files), 'file(s) found.')
 
     return valid_files
+
+
+def get_all_data_folders(search_str='', folder=None, file_format='', print_info=False):
+    """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
+
+    @param string search_str: the string to search in the file name and filepath
+
+    @param string folder: the folder to search into
+
+    @param string file_format: by default return all the file format, or else specify the format like 'dat' or '.dat'
+
+    @param string print_info: print the number of found files if true
+
+    @return list : the list of all folders in which at least a data file has been found.
+
+    """
+
+    if folder == None:
+        search_dir = '.'
+    else:
+        search_dir = folder
+
+    valid_folders = []
+
+    if len(file_format) == 0:
+        for (dirpath, dirnames, files) in os.walk(search_dir):
+            for name in files:
+                if (search_str in name) & (dirpath not in valid_folders):
+                    valid_folders.append(dirpath)
+            for dirname in dirnames:
+                if search_str in dirname:
+                    valid_folders.append(os.path.join(dirpath, dirname))
+    else:
+        m = -len(file_format)
+        for (dirpath, dirnames, files) in os.walk(search_dir):
+            for name in files:
+                if (search_str in name) & (name[m:] == file_format) & (dirpath not in valid_folders):
+                    valid_folders.append(dirpath)
+            for dirname in dirnames:
+                if (search_str in dirname):
+                    for name in os.listdir(os.path.join(dirpath, dirname)):
+                        if (name[m:] == file_format) & (os.path.join(dirpath, dirname) not in valid_folders):
+                            valid_folders.append(os.path.join(dirpath, dirname))
+
+    if print_info:
+        print(len(valid_folders), 'folder(s) found.')
+
+    return valid_folders
 
 
 def read_data_file(filename):
@@ -137,10 +186,15 @@ def get_dataframe_from_file(filename, additional_dictionary={}):
     return df
 
 
-def get_dataframe_from_folders(folders, additional_dictionary={}, additional_dictionaries=[]):
+def get_dataframe_from_folders(folders, file_format='.dat', search_str='', additional_dictionary={},
+                               additional_dictionaries=[]):
     """ Read all the Qudi file in a folder or list of folders and return the data parsed as a pandas dataframe
 
     @param string or list(string) folders: folder or folders in wich to read all files
+
+    @param string file_format: string to specify the file format wanted, eg '.dat', 'dat'
+
+    @param string search_str: select the files that contains this string in their name
 
     @param dictionary additional_dictionary: keys and values to add manually to each dataframe
 
@@ -150,8 +204,14 @@ def get_dataframe_from_folders(folders, additional_dictionary={}, additional_dic
     If a key is overwritten, the order of importance is : additional_dictionaries > additional_dictionary > data file
 
     @return pandas.Series: Panda dataframe containting one row, the parameters and data columns and its values
+    except if '' is specified for the file_format param, then return False
 
     """
+    if len(file_format) == 0:
+        print('Specify the format of the files and try again !')
+        return False
+
+    m = -len(file_format)
     frames = []
     if type(folders) == str:
         folders = [folders]
@@ -164,9 +224,14 @@ def get_dataframe_from_folders(folders, additional_dictionary={}, additional_dic
         else:
             dictionary = additional_dictionary
         for filename in os.listdir(folder):
-            frames.append(get_dataframe_from_file('{}/{}'.format(folder, filename), additional_dictionary=dictionary))
+            if (filename[m:] == file_format) & (search_str in filename):
+                dictionary.update({'filepath': folder})
+                dictionary.update({'filename': filename})
+                frames.append(
+                    get_dataframe_from_file('{}/{}'.format(folder, filename), additional_dictionary=dictionary))
     df = pd.concat(frames, sort=False).reset_index(drop=True)
     return df
+
 
 
 def rebin(data, rebin_ratio, do_average=False):
