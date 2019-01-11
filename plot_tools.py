@@ -7,6 +7,84 @@ import data_analysis_tools.data as dat
 import pandas as pd
 
 
+def plot_simple_data(x, y, ax=None, **kw):
+    """
+    Function to plot simple graph
+
+    :param x: (array-like or scalar) data to plot on the x_axis
+    :param y: (array-like or scalar) data to plot on the y_axis
+    :param ax: (optional) the axe object for matplotlib.pyplot
+    :param keywords: (optional) standard keyword arguments to change the appearance of the figure
+
+    :return : array of the plotted data
+    """
+
+    figsize = kw.pop('figsize', (10, 6))
+    x_range = kw.pop('x_range', None)
+    y_range = kw.pop('y_range', None)
+    color = kw.pop('color', 'r')
+    linestyle = kw.pop('linestyle', '-')
+    marker = kw.pop('marker', None)
+    marker_s = kw.pop('marker_size', 6)
+    x_label = kw.pop('x_label', '')
+    y_label = kw.pop('y_label', '')
+    title = kw.pop('title', '')
+    label_fs = kw.pop('label_fontsize', 14)
+    title_fs = kw.pop('title_fontsize', 15)
+    tick_fs = kw.pop('tick_fontsize', 12)
+
+    if ax == None:
+        fig, ax = plt.subplots(figsize=figsize)
+
+    line = ax.plot(x, y,
+            color=color, linestyle=linestyle, marker=marker, markersize=marker_s)
+
+    if x_range != None:
+        ax.set_xlim(x_range)
+    if y_range != None:
+        ax.set_ylim(y_range)
+
+    ax.set_xlabel(x_label, fontsize=label_fs)
+    ax.set_ylabel(y_label, fontsize=label_fs)
+    ax.tick_params(axis='both', which='major', labelsize=tick_fs)
+    ax.set_title(title, fontsize=title_fs)
+
+    return line
+
+
+def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
+    """
+    Function to plot a Pandas dataframe
+
+    :param df: (Pandas Dataframe) the dataframe to plot
+    :param x_key: (str) the label of the dataframe column to plot on the x_axis
+    :param y_key: (str) the label of the dataframe column to plor on the y_axis
+    :param ax: the axe object from matplotlib.pyplot
+    :param rebin_integer: (int) the integer to rebin the data; use dat.rebin function
+    :param kw: the keywords to pass to the plot_simple_data function to choose the appearance of the plot figure
+    :return : array of the plotted data
+    """
+    cmap = kw.pop('cmap', plt.cm.viridis)
+    color_scale = kw.pop('color_scale', None)
+
+    if ax == None:
+        fig, ax = plt.subplots(figsize=figsize)
+
+    lines = []
+    for i, row in df.iterrows():
+        if len(color_scale) == 0:
+            kw['color'] = cmap(i / len(df))
+        else:
+            kw['color'] = cmap(color_scale[i] / max(color_scale))
+        y_rebin = dat.rebin(row[y_key], int(rebin_integer), do_average=False)
+        x_rebin = dat.decimate(row[x_key], int(rebin_integer))
+        line = plot_simple_data(x_rebin, y_rebin, ax=ax, **kw)
+        lines.append(line)
+
+    return lines
+
+
+
 def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=None, x='x', y='y', **test_dic):
     """ Helper function to plot PL traces of a dataframe
 

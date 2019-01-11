@@ -7,13 +7,10 @@ import pandas as pd
 def get_all_data_files(search_str='', folder=None, file_format='', print_info=False):
     """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
 
-    @param string search_str: the string to search in the file name and filepath
-
-    @param string folder: the folder to search into
-
-    @param string file_format: by default return all the file format, or else specify the format like 'dat' or '.dat'
-
-    @param string print_info: print the number of found files if true
+    @param string search_str (optional): the string to search in the file name and filepath
+    @param string folder (optional): the folder to search into
+    @param string file_format (optional): by default return all the file format, or else specify the format like 'dat' or '.dat'
+    @param string print_info (optional): print the number of found files if true
 
     @return list : the list of all files found, with full filepath
 
@@ -55,13 +52,10 @@ def get_all_data_files(search_str='', folder=None, file_format='', print_info=Fa
 def get_all_data_folders(search_str='', folder=None, file_format='', print_info=False):
     """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
 
-    @param string search_str: the string to search in the file name and filepath
-
-    @param string folder: the folder to search into
-
-    @param string file_format: by default return all the file format, or else specify the format like 'dat' or '.dat'
-
-    @param string print_info: print the number of found files if true
+    @param string search_str (optional): the string to search in the file name and filepath
+    @param string folder (optional): the folder to search into
+    @param string file_format (optional): by default return all the file format, or else specify the format like 'dat' or '.dat'
+    @param string print_info (optional): print the number of found files if true
 
     @return list : the list of all folders in which at least a data file has been found.
 
@@ -147,7 +141,6 @@ def get_series_from_file(filename, additional_dictionary={}):
     """ Read a Qudi data file and return the data parsed as a pandas series
 
     @param string filename: the file to read
-
     @param dictionary additional_dictionary: keys and values to add manually to the series
 
 
@@ -175,7 +168,6 @@ def get_dataframe_from_file(filename, additional_dictionary={}):
     """ Read a Qudi data file and return the data parsed as a pandas dataframe
 
     @param string filename: the file to read
-
     @param dictionary additional_dictionary: keys and values to add manually to the dataframe
 
 
@@ -191,16 +183,11 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
     """ Read all the Qudi file in a folder or list of folders and return the data parsed as a pandas dataframe
 
     @param string or list(string) folders: folder or folders in wich to read all files
-
     @param string file_format: string to specify the file format wanted, eg '.dat', 'dat'
-
     @param string search_str: select the files that contains this string in their name
-
     @param dictionary additional_dictionary: keys and values to add manually to each dataframe
-
     @param list(dictionary) additional_dictionaries: keys and values to add manually to the each dataframe from the
                                                       respective folder
-
     If a key is overwritten, the order of importance is : additional_dictionaries > additional_dictionary > data file
 
     @return pandas.Series: Panda dataframe containting one row, the parameters and data columns and its values
@@ -238,7 +225,6 @@ def rebin(data, rebin_ratio, do_average=False):
     """ Rebin a 1D array the good old way.
 
     @param 1d numpy array data : The data to rebin
-
     @param int rebin_ratio: The number of old bin per new bin
 
     @return 1d numpy array : The array rebinned
@@ -259,7 +245,6 @@ def decimate(data, decimation_ratio):
     """ Decimate a 1D array . This means some value are dropped, not averaged
 
     @param 1d numpy array data : The data to decimated
-
     @param int decimation_ratio: The number of old value per new value
 
     @return 1d numpy array : The array decimated
@@ -279,5 +264,3 @@ def get_window(x, y, a, b):
     x = x[mask]
     y = y[mask]
     return x, y
-
-
