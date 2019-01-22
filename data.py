@@ -17,7 +17,7 @@ def get_all_data_files(search_str='', folder=None, file_format='', print_info=Fa
     """
 
     if folder == None:
-        search_dir = '.'
+        search_dir = os.getcwd()
     else:
         search_dir = folder
 
@@ -44,7 +44,7 @@ def get_all_data_files(search_str='', folder=None, file_format='', print_info=Fa
                         if (name[m:] == file_format):
                             valid_files.append(os.path.join(dirpath, dirname, name))
     if print_info:
-        print(len(valid_files), 'file(s) found.')
+        print(len(valid_files), 'file(s) found in ', search_dir)
 
     return valid_files
 
@@ -62,7 +62,7 @@ def get_all_data_folders(search_str='', folder=None, file_format='', print_info=
     """
 
     if folder == None:
-        search_dir = '.'
+        search_dir = os.getcwd()
     else:
         search_dir = folder
 
@@ -89,7 +89,7 @@ def get_all_data_folders(search_str='', folder=None, file_format='', print_info=
                             valid_folders.append(os.path.join(dirpath, dirname))
 
     if print_info:
-        print(len(valid_folders), 'folder(s) found.')
+        print(len(valid_folders), 'folder(s) found in ', search_dir)
 
     return valid_folders
 
