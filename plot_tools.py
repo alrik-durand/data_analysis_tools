@@ -70,10 +70,11 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
     :param kw: the keywords to pass to the plot_simple_data function to choose the appearance of the plot figure
     :return : array of the plotted data
     """
-    cmap         = kw.pop('cmap', plt.cm.viridis)
-    color_scale  = kw.pop('color_scale', None)
-    legend_label = kw.pop('legend_label', '')
-    legend_fs    = kw.pop('legend_fontsize', 14)
+    cmap               = kw.pop('cmap', plt.cm.viridis)
+    color_scale        = kw.pop('color_scale', None)
+    legend_label       = kw.pop('legend_label', '')
+    legend_fs          = kw.pop('legend_fontsize', 14)
+    rebin_with_average = kw.pop('rebin_with_average', False)
 
 
     if ax == None:
@@ -96,7 +97,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
             kw['legend_label'] = legend_label[i]
             kw['show_legend']  = True
 
-        y_rebin = dat.rebin(row[y_key], int(rebin_integer), do_average=False)
+        y_rebin = dat.rebin(row[y_key], int(rebin_integer), do_average=rebin_with_average)
         x_rebin = dat.decimate(row[x_key], int(rebin_integer))
         line = plot_simple_data(x_rebin, y_rebin, ax=ax, **kw)
         lines.append(line)
