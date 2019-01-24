@@ -120,19 +120,20 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
     return lines
 
 
-
-def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=None, x='x', y='y', **test_dic):
+def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=None, x='x', y='y', plot_kw={},
+              **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
     @param Axe ax: The axe object from patplotlib.pyplot
     @param DataFrame df: The dataframe containing the 'x' and 'y' columns
-    @param int rebin_ratio (optional): A integer to rebin the data by a certain value
-    @param colors (optional): An array (same length as df) or the name of a column to compute the color based on max
-    @param cmap (optional): A color map
-    @param (float, float) window (optional): a window (x_min, x_max) to plot only part of the data
+    @param int rebin_ratio: A integer to rebin the data by a certain value
+    @param colors: An array (same length as df) or the name of a column to compute the color based on max
+    @param cmap: A color map
+    @param (float, float) window: a window (x_min, x_max) to plot only part of the data
     @param the name of the column to use as x values
     @param the name of the column to use as y values
-    @param diect test_dic (optional): A dictionary of (key, value) to plot only some rows where df[key]=value
+    @param plot_kw: A dictionary passed to the plot function
+    @param diect test_dic: A dictionary of (key, value) to plot only some rows where df[key]=value
 
     @return array of lines created by plot() function
     """
@@ -159,7 +160,7 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=No
                 x_data, y_data = dat.get_window(x_decimated, y_decimated, *window)
             else:
                 x_data, y_data = x_decimated, y_decimated
-            line = ax.plot(x_data, y_data, label=label, color=color)
+            line = ax.plot(x_data, y_data, label=label, color=color, **plot_kw)
             lines.append(line)
     return lines
 
