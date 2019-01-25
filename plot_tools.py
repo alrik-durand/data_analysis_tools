@@ -35,11 +35,16 @@ def plot_simple_data(x, y, ax=None, **kw):
     legend_fs    = kw.pop('legend_fontsize', 14)
     title_fs     = kw.pop('title_fontsize', 15)
     tick_fs      = kw.pop('tick_fontsize', 12)
+    rebin_integer= kw.pop('rebin_integer', 1)
+    rebin_with_average = kw.pop('rebin_with_average', False)
 
     if ax == None:
         fig, ax = plt.subplots(figsize=figsize)
 
-    line = ax.plot(x, y,
+    y_rebin = dat.rebin(y, int(rebin_integer), do_average=rebin_with_average)
+    x_rebin = dat.decimate(x, int(rebin_integer))
+
+    line = ax.plot(x_rebin, y_rebin,
             color=color, linestyle=linestyle, marker=marker, markersize=marker_s,
             label = legend_label)
 
