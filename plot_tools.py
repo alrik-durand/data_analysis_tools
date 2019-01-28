@@ -95,7 +95,10 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
         if len(color_scale) == 0:
             kw['color'] = cmap(i / len(df))
         else:
-            kw['color'] = cmap(color_scale[i] / max(color_scale))
+            if max(color_scale) >1 :
+                kw['color'] = cmap(color_scale[i] / max(color_scale))
+            else :
+                kw['color'] = cmap(color_scale[i])
 
 
         if show_legend :
