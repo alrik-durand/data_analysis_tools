@@ -179,7 +179,7 @@ def get_dataframe_from_file(filename, additional_dictionary={}):
 
 
 def get_dataframe_from_folders(folders, file_format='.dat', search_str='', additional_dictionary={},
-                               additional_dictionaries=[]):
+                               additional_dictionaries=[], regexp=''):
     """ Read all the Qudi file in a folder or list of folders and return the data parsed as a pandas dataframe
 
     @param string or list(string) folders: folder or folders in wich to read all files
@@ -188,6 +188,8 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
     @param dictionary additional_dictionary: keys and values to add manually to each dataframe
     @param list(dictionary) additional_dictionaries: keys and values to add manually to the each dataframe from the
                                                       respective folder
+    @param re regexp: A regular expression that each path must match to imported
+
     If a key is overwritten, the order of importance is : additional_dictionaries > additional_dictionary > data file
 
     @return pandas.Series: Panda dataframe containting one row, the parameters and data columns and its values
@@ -254,6 +256,10 @@ def decimate(data, decimation_ratio):
     length = (len(data) // decimation_ratio) * decimation_ratio
     data_decimated = data[:length:decimation_ratio]
     return data_decimated
+
+
+def rebin_xy(x, y,  ratio=1, do_average=True):
+    return decimate(x, ratio), rebin(y, ratio, do_average)
 
 
 def get_window(x, y, a, b):
