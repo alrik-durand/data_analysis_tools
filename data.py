@@ -259,6 +259,7 @@ def decimate(data, decimation_ratio):
 
 
 def rebin_xy(x, y,  ratio=1, do_average=True):
+    """ Helper method to decimate x and rebin y, with do_average True as default """
     return decimate(x, ratio), rebin(y, ratio, do_average)
 
 
