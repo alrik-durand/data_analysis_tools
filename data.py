@@ -222,6 +222,22 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
     return df
 
 
+def copy_column_dataframe(df, src, dst):
+    """ Function that copy a column to another if the destination is NaN and the source is not
+
+    When using Qudi with scripts, the names of the columns may change from one file to another.
+
+    Example :
+        dat.copy_column_dataframe(df,'bin width (s)', 'binwidth')
+
+    """
+    if not hasattr(df, dst):
+        df[dst]=None
+    for i, row in df.iterrows():
+        if (row[dst] is None or (type(row[dst])==float and pd.isnull(row[dst])) ) \
+        and (row[src] is not None and not (type(row[src])==float and pd.isnull(row[src])) ):
+            row[dst] = row[src]
+
 
 def rebin(data, rebin_ratio, do_average=False):
     """ Rebin a 1D array the good old way.
