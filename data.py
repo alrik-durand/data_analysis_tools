@@ -287,3 +287,46 @@ def get_window(x, y, a, b):
     x = x[mask]
     y = y[mask]
     return x, y
+
+
+def match_columns(df_list, columns=[]):
+    """ Function to extract from multiple dataframes the rows which have a match in all other dataframes
+
+    @param: list(DataFrame) df_list: A list of DataFrames
+    @param: list(DataFrame) df_list: A list colunmns names to match
+
+    @return A dataframe with is the concatenation of all the matched rows
+
+    To understand with the function does, let's take an example :
+    You have a series of experiment with magnetic field and another without magnetic field. You cut them in two
+    DataFrames, and then you want to get only the rows corresponding the experiments you have done in both conditions
+    (not the ones you have only made with one or the other).
+    Then you can do :
+        data = match_columns([df_1, df_2], ['laser_power', 'mw_frequeny'])
+    """
+    # Checks for mistakes
+    for column in columns:
+        for df in df_list:
+            if column not in df.keys():
+                raise KeyError('Column {} is not defined is all of the dataframe'.format(column))
+    # Create masks
+    masks = []
+    for i, df in enumerate(df_list):
+        masks.append(np.zeros(len(df), dtype=bool))
+        df_list[i] = df.reset_index()
+    # Look for matches
+    for i, row in df_list[0].iterrows():
+        indexes = []
+        for df in df_list[1:]:
+            for column in columns:
+                df = df[df[column] == row[column]]
+            if len(df) > 0:
+                indexes.append(list(df.index))
+
+        if len(indexes) == len(df_list[1:]):
+            masks[0][i] = True
+            for j, index in enumerate(indexes):
+                masks[j + 1][indexes] = True
+    masked = [df[masks[i]] for i, df in enumerate(df_list)]
+    return pd.concat(masked, sort=False).reset_index(drop=True)
+
