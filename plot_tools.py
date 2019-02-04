@@ -80,6 +80,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
     legend_label       = kw.pop('legend_label', '')
     legend_fs          = kw.pop('legend_fontsize', 14)
     rebin_with_average = kw.pop('rebin_with_average', False)
+    normalize_colors   = kw.pop('normalize_colors', True)
 
 
     if ax == None:
@@ -95,9 +96,9 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
         if len(color_scale) == 0:
             kw['color'] = cmap(i / len(df))
         else:
-            if max(color_scale) >1 :
+            if normalize_colors:
                 kw['color'] = cmap(color_scale[i] / max(color_scale))
-            else :
+            else:
                 kw['color'] = cmap(color_scale[i])
 
 
