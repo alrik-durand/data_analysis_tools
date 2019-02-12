@@ -7,6 +7,16 @@ import data_analysis_tools.data as dat
 import pandas as pd
 
 
+def set_rc_params(mpl):
+    """ Helper method to set the right sizes in matplotlib """
+    mpl.rcParams['font.size'] = 14
+    mpl.rcParams['axes.titlesize'] = 15
+    mpl.rcParams['axes.labelsize'] = 14
+    mpl.rcParams['legend.fontsize'] = 13
+    mpl.rcParams['xtick.labelsize'] = 13
+    mpl.rcParams['ytick.labelsize'] = 13
+
+
 def plot_simple_data(x, y, ax=None, **kw):
     """
     Function to plot simple graph
