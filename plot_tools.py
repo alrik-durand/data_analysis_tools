@@ -170,7 +170,10 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=No
                 x_data, y_data = dat.get_window(x_decimated, y_decimated, *window)
             else:
                 x_data, y_data = x_decimated, y_decimated
-            line = ax.plot(x_data, y_data, label=label, color=color, **plot_kw)
+            plot_kw_row = plot_kw.copy()
+            if 'plot_kw' in row.keys() and isinstance(row['plot_kw'], dict):
+                plot_kw_row.update(row['plot_kw'])
+            line = ax.plot(x_data, y_data, label=label, color=color, **plot_kw_row)
             lines.append(line)
     return lines
 
