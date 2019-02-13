@@ -140,8 +140,8 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
     return lines
 
 
-def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=None, x='x', y='y', plot_kw={},
-              **test_dic):
+def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x', y='y', plot_kw={},
+              remove_label_doubles=True, **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
     @param Axe ax: The axe object from patplotlib.pyplot
@@ -153,11 +153,13 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=No
     @param the name of the column to use as x values
     @param the name of the column to use as y values
     @param plot_kw: A dictionary passed to the plot function
-    @param diect test_dic: A dictionary of (key, value) to plot only some rows where df[key]=value
+    @param bool remove_label_doubles: True to prevent multiple occurrences of the same label
+    @param dict test_dic: A dictionary of (key, value) to plot only some rows where df[key]=value
 
     @return array of lines created by plot() function
     """
     lines = []
+    label_set = set()
     for i, row in df.iterrows():
         show = True
         for key in test_dic:
@@ -168,6 +170,7 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=No
             x_decimated = dat.decimate(row[x], int(rebin_ratio))
 
             color = None
+            cmap = cmap if cmap else plt.cm.viridis
             if colors is not None and type(colors) == str:
                 n = int(row[colors]/max(df[colors])*256)
                 color = cmap(n)
@@ -175,7 +178,12 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=No
                     (type(colors) == pd.core.series.Series or type(colors) == list or type(colors) == np.ndarray):
                 n = int(colors[i]/max(colors)*256)
                 color = cmap(n)
+            if row.get('color'):
+                color = cmap(row.get('color'))
             label = row['label'] if 'label' in row.index else None
+            if remove_label_doubles and label is not None and label in label_set:
+                label = None
+            label_set.update([label])
             if window is not None:
                 x_data, y_data = dat.get_window(x_decimated, y_decimated, *window)
             else:
@@ -187,3 +195,47 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=plt.cm.viridis, window=No
             lines.append(line)
     return lines
 
+
+def plot_grid(data, lines_key, columns, x_label=None, y_label=None, height_per_line=4, width_per_column=5,
+              rebin_ratio=1, x_label_all=False, y_label_all=False, line_ascending=True, cmap=None, ncol=1,
+              x_lim=None, y_lim=None, plot_kw={}):
+    lines_values = np.sort(np.array(list(set(data[lines_key]))))
+    if not line_ascending:
+        lines_values = np.flip(lines_values, axis=0)
+
+    h = len(lines_values)
+    w = len(columns)
+
+    fig, axes = plt.subplots(h, w, figsize=(width_per_column * w, height_per_line * h))
+
+    for i, line in enumerate(axes):
+        line_value = lines_values[i]
+        df = data[data[lines_key] == line_value]
+
+        for j, ax in enumerate(line):
+            column = columns[j]
+            if x_label_all or i == h - 1:
+                ax.set_xlabel(x_label)
+            if y_label_all or j == 0:
+                ax.set_ylabel(y_label)
+            if x_lim is not None:
+                    ax.set_xlim(x_lim)
+            if y_lim is not None:
+                ax.set_ylim(y_lim)
+
+            cmap_line = column.get('cmap') if column.get('cmap') else cmap
+
+            plot_data(ax, df, x=column['x'], y=column['y'], rebin_ratio=rebin_ratio, cmap=cmap_line, plot_kw=plot_kw)
+
+            text = None
+            if column.get('text'):
+                text = column.get('text').format(line_value)
+            if text:
+                text_kw = column.get('text_kw') if column.get('text_kw') else {}
+                ax.text(s=text, transform=ax.transAxes, horizontalalignment='center', fontsize=13, **text_kw)
+
+            if j == w - 1:
+                handles, labels = ax.get_legend_handles_labels()
+                ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1.03, 0, 0.5, 1), fontsize=13, ncol=ncol)
+
+    return fig, axes
