@@ -46,7 +46,7 @@ def plot_simple_data(x, y, ax=None, **kw):
     title_fs     = kw.pop('title_fontsize', 15)
     tick_fs      = kw.pop('tick_fontsize', 12)
     rebin_integer= kw.pop('rebin_integer', 1)
-    rebin_with_average = kw.pop('rebin_with_average', False)
+    rebin_with_average = kw.pop('rebin_with_average', True)
 
     if ax == None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -89,7 +89,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
     color_scale        = kw.pop('color_scale', None)
     legend_label       = kw.pop('legend_label', '')
     legend_fs          = kw.pop('legend_fontsize', 14)
-    rebin_with_average = kw.pop('rebin_with_average', False)
+    rebin_with_average = kw.pop('rebin_with_average', True)
     normalize_colors   = kw.pop('normalize_colors', True)
 
 
