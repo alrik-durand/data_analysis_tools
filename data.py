@@ -117,7 +117,7 @@ def read_data_file(filename):
                 try:
                     value = float(value)
                 except ValueError:
-                    value = None
+                    value = str.strip(value)
                 parameters[key] = value
         last_line = line
         line = file.readline()
