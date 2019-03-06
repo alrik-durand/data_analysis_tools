@@ -141,7 +141,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
 
 
 def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x', y='y', plot_kw={},
-              remove_label_doubles=True, **test_dic):
+              remove_label_doubles=True, label=None, **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
     @param Axe ax: The axe object from patplotlib.pyplot
@@ -163,8 +163,12 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
     for i, row in df.iterrows():
         show = True
         for key in test_dic:
-            if row[key] != test_dic[key]:
-                show = False
+            if type(test_dic[key]) is not list:
+                if row[key] != test_dic[key]:
+                    show = False
+            else:
+                if row[key] not in test_dic[key]:
+                    show = False
         if show:
             y_decimated = dat.rebin(row[y], int(rebin_ratio), do_average=True)
             x_decimated = dat.decimate(row[x], int(rebin_ratio))
@@ -180,10 +184,16 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
                 color = cmap(n)
             if row.get('color'):
                 color = cmap(row.get('color'))
-            label = row['label'] if 'label' in row.index else None
-            if remove_label_doubles and label is not None and label in label_set:
-                label = None
-            label_set.update([label])
+            if label is not None:
+                row_dict = row.to_dict()
+                label_row = label.format(**row_dict)
+            elif 'label' in row.index:
+                label_row = row['label']
+            else:
+                label_row = None
+            if remove_label_doubles and label_row is not None and label_row in label_set:
+                label_row = None
+            label_set.update([label_row])
             if window is not None:
                 x_data, y_data = dat.get_window(x_decimated, y_decimated, *window)
             else:
@@ -191,7 +201,7 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             plot_kw_row = plot_kw.copy()
             if 'plot_kw' in row.keys() and isinstance(row['plot_kw'], dict):
                 plot_kw_row.update(row['plot_kw'])
-            line = ax.plot(x_data, y_data, label=label, color=color, **plot_kw_row)
+            line = ax.plot(x_data, y_data, label=label_row, color=color, **plot_kw_row)
             lines.append(line)
     return lines
 
