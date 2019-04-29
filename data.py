@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
-
+import lmfit
 
 def get_all_data_files(search_str='', folder=None, file_format='', print_info=False):
     """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
@@ -330,3 +330,48 @@ def match_columns(df_list, columns=[]):
     masked = [df[masks[i]] for i, df in enumerate(df_list)]
     return pd.concat(masked, sort=False).reset_index(drop=True)
 
+
+def fit_data(data, function, params, x='x', y='y', verbose=False):
+    """ Use lmfit to automatically fit all the curves of a dataframe based on a param object
+
+    @param Dataframe data: The dataframe containing the data
+    @param Function function: The function used to fit. See example below
+    @param lmfit.Parameters params: The lmfit parameters object defining the variables
+    @param str x: the name of the x axis
+    @param str y: the name of the y axis
+    @param bool verbose: Set to true to have the fit report of lmfit of every fit printed
+
+    Note: The function here is minimized, so it has to do the subtraction explicitly.
+
+    Example to fit un antibunching :
+
+        def g2_function(params, t, data):
+            x = np.abs(t - params['t0'])
+            model = params['amplitude'] * np.exp(-x/params['tau_antibunching'])
+            model += params['offset']
+            return model - data
+
+        params = lmfit.Parameters()
+        params.add('t0', value=280e-9, vary=True)
+        params.add('tau_antibunching', value=10e-9, vary=True)
+        params.add('amplitude', value=-1, vary=True)
+        params.add('offset', value=1, vary=False)
+
+        fit_data(data, g2_function, params)
+
+    """
+    data['{}_fitted'.format(y)] = None
+    for param in list(params):
+        data[param] = None
+        data['{}_err'.format(param)] = None
+    for i, row in data.iterrows():
+        result = lmfit.minimize(function, params, args=(row[x], row[y]))
+        if verbose:
+            print(lmfit.fit_report(result))
+        data.at[i, '{}_fitted'.format(y)] = row[y] + result.residual
+        for param in list(params):
+            data.at[i, param] = result.params[param].value
+            data.at[i, '{}_err'.format(param)] = result.params[param].stderr
+    for param in list(params):
+        data[param] = data[param].astype(float)
+        data['{}_err'.format(param)] = data['{}_err'.format(param)].astype(float)
