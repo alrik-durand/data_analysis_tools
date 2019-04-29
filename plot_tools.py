@@ -209,6 +209,35 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
 def plot_grid(data, lines_key, columns, x_label=None, y_label=None, height_per_line=4, width_per_column=5,
               rebin_ratio=1, x_label_all=False, y_label_all=False, line_ascending=True, cmap=None, ncol=1,
               x_lim=None, y_lim=None, plot_kw={}):
+    """
+
+    @param DataFrame df: The dataframe containing the 'x' and 'y' columns
+    @param str lines_key: The name of the column on witch to iterate to create the lines
+    @param list(dict) columns: An array of dictionaries describing the content that need to be plotted (see example)
+    @param str x_label: The label for every x axis
+    @param y_label: The label for every y axis
+    @param height_per_line: The height per line (in matplotlib unit)
+    @param width_per_column: The width per column (in matplotlib unit)
+    @param rebin_ratio: A integer to rebin the data by a certain value
+    @param x_label_all: Show the x label for every line instead of just the last
+    @param y_label_all: Show the y label for every columns instead of just the first
+    @param line_ascending: Set to true for ascending order
+    @param cmap: the cmap
+    @param ncol: The number of columns for the legend
+    @param (float, float) x_lim: The x limit of the plot
+    @param (float, float) y_lim: The x limit of the plot
+    @param plot_kw: Parameters transferred to matplotlib's plot function
+
+    Example :
+        y_keys = [{'x': 'x_0', 'y': 'y_0', 'text':'$m_s = 0$\n$P_{{read}}=$ {:.0f} µW ',
+               'text_kw': {'x': 0.5, 'y': 0.8} },
+              {'x': 'x_1', 'y': 'y_1_norm', 'text':'$m_s = \pm 1$\n$P_{{read}}=$ {:.0f} µW',
+               'text_kw': {'x': 0.5, 'y': 0.8}}
+             ]
+             
+         fig, axes = pltools.plot_grid(data, 'power_read_u', y_keys, x_label='Time [us]', y_label = "PL")
+
+    """
     lines_values = np.sort(np.array(list(set(data[lines_key]))))
     if not line_ascending:
         lines_values = np.flip(lines_values, axis=0)
