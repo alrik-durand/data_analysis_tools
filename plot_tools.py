@@ -141,7 +141,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
 
 
 def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x', y='y', plot_kw={},
-              remove_label_doubles=True, label=None, **test_dic):
+              remove_label_doubles=True, label=None, offset_increment=0, **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
     @param Axe ax: The axe object from patplotlib.pyplot
@@ -160,10 +160,14 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
     """
     lines = []
     label_set = set()
+    j = 0
     for i, row in df.iterrows():
         show = True
         for key in test_dic:
-            if type(test_dic[key]) is not list:
+            if type(test_dic[key]) is tuple:
+                if not test_dic[key][0] < row[key] < test_dic[key][1]:
+                    show = False
+            elif type(test_dic[key]) is not list:
                 if row[key] != test_dic[key]:
                     show = False
             else:
@@ -201,7 +205,8 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             plot_kw_row = plot_kw.copy()
             if 'plot_kw' in row.keys() and isinstance(row['plot_kw'], dict):
                 plot_kw_row.update(row['plot_kw'])
-            line = ax.plot(x_data, y_data, label=label_row, color=color, **plot_kw_row)
+            line = ax.plot(x_data, y_data+j*offset_increment, label=label_row, color=color, **plot_kw_row)
+            j += 1
             lines.append(line)
     return lines
 
@@ -234,7 +239,7 @@ def plot_grid(data, lines_key, columns, x_label=None, y_label=None, height_per_l
               {'x': 'x_1', 'y': 'y_1_norm', 'text':'$m_s = \pm 1$\n$P_{{read}}=$ {:.0f} µW',
                'text_kw': {'x': 0.5, 'y': 0.8}}
              ]
-             
+
          fig, axes = pltools.plot_grid(data, 'power_read_u', y_keys, x_label='Time [us]', y_label = "PL")
 
     """
