@@ -180,8 +180,11 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             color = None
             cmap = cmap if cmap else plt.cm.viridis
             if colors is not None and type(colors) == str:
-                n = int(row[colors]/max(df[colors])*256)
-                color = cmap(n)
+                if type(row[colors])==str:
+                    color = row[colors]
+                else:
+                    n = int(row[colors]/max(df[colors])*256)
+                    color = cmap(n)
             if colors is not None and \
                     (type(colors) == pd.core.series.Series or type(colors) == list or type(colors) == np.ndarray):
                 n = int(colors[i]/max(colors)*256)
