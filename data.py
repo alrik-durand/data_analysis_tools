@@ -361,17 +361,25 @@ def fit_data(data, function, params, x='x', y='y', verbose=False):
 
     """
     data['{}_fitted'.format(y)] = None
+    data['fit_success'] = False
+    data['fit_result'] = None
+    data['fit_result'] = None
     for param in list(params):
         data[param] = None
         data['{}_err'.format(param)] = None
     for i, row in data.iterrows():
-        result = lmfit.minimize(function, params, args=(row[x], row[y]))
-        if verbose:
-            print(lmfit.fit_report(result))
-        data.at[i, '{}_fitted'.format(y)] = row[y] + result.residual
-        for param in list(params):
-            data.at[i, param] = result.params[param].value
-            data.at[i, '{}_err'.format(param)] = result.params[param].stderr
+        try:
+            result = lmfit.minimize(function, params, args=(row[x], row[y]))
+            if verbose:
+                print(lmfit.fit_report(result))
+            data.at[i, '{}_fitted'.format(y)] = row[y] + result.residual
+            for param in list(params):
+                data.at[i, param] = result.params[param].value
+                data.at[i, '{}_err'.format(param)] = result.params[param].stderr
+            data.at[i, 'fit_success'] = True
+            data.at[i, 'fit_result'] = result
+        except ValueError:
+            pass
     for param in list(params):
         data[param] = data[param].astype(float)
         data['{}_err'.format(param)] = data['{}_err'.format(param)].astype(float)
