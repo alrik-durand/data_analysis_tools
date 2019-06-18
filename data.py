@@ -383,3 +383,23 @@ def fit_data(data, function, params, x='x', y='y', verbose=False):
     for param in list(params):
         data[param] = data[param].astype(float)
         data['{}_err'.format(param)] = data['{}_err'.format(param)].astype(float)
+
+
+def clean_traces(data, x_additional_prefix='n', y_additional_prefix='k'):
+    """ Clean a Qudi Pulsemeasurement raw trace and construct x and y axis
+
+    The Qudi Pulsemeasurement logic saves metadata with unfriendly names
+    """
+    copy_column_dataframe(data, 'Signal(counts)', 'trace')
+    copy_column_dataframe(data, 'Measurement sweeps', 'sweeps')
+    copy_column_dataframe(data, 'bin width (s)', 'binwidth')
+    copy_column_dataframe(data, 'record length (s)', 'windows_length')
+
+    data['x'] = None
+    data['x_n'] = None
+    data['y'] = data['trace'] / (data['sweeps'] * data['binwidth'])
+    data['y_k'] = data['y']*1e3
+    for i, row in data.iterrows():
+        data.at[i, 'x'] = np.arange(len(row['trace'])) * row['binwidth']
+        data.at[i, 'x_n'] = data.at[i, 'x'] * 1e9
+
