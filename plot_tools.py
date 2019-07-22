@@ -173,7 +173,10 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             else:
                 if row[key] not in test_dic[key]:
                     show = False
+        if row[x] is None or row[y] is None:
+            show = False
         if show:
+
             y_decimated = dat.rebin(row[y], int(rebin_ratio), do_average=True)
             x_decimated = dat.decimate(row[x], int(rebin_ratio))
 
