@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import lmfit
+import scipy
 
 def get_all_data_files(search_str='', folder=None, file_format='', print_info=False):
     """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
@@ -403,3 +404,105 @@ def clean_traces(data, x_additional_prefix='n', y_additional_prefix='k'):
         data.at[i, 'x'] = np.arange(len(row['trace'])) * row['binwidth']
         data.at[i, 'x_n'] = data.at[i, 'x'] * 1e9
 
+
+def m_to_eV(data, x='x', result_key='{}_eV'):
+    """ Convert a column in meter to eV
+
+    @param Dataframe data: The dataframe containing the data
+    @param string x: The input column
+    @param string result_key: The name of the output colmun
+
+    Convert a column (by default 'x') to eV and save it as result_key (by default 'XXX_eV')
+
+    You can specify the result by giving an key directly or using '{}' in the name so that it is replaced with the input
+    key
+
+    """
+    c = 299792458
+    eV = 1.602176634e-19
+    h = 6.62607015e-34
+    try:
+        result_key = result_key.format(x)
+    except:
+        result_key = result_key
+    data[result_key] = None
+    for i, row in data.iterrows():
+        data.at[i, result_key] = (h * c / row[x]) / eV
+
+
+def eV_to_m(data, x='x', result_key='{}_m'):
+    """ Convert a column in eV to meter
+
+    @param Dataframe data: The dataframe containing the data
+    @param string x: The input column
+    @param string result_key: The name of the output colmun
+
+    Convert a column (by default 'x') from eV to meter and save it as result_key (by default 'XXX_eV')
+
+    You can specify the result by giving an key directly or using '{}' in the name so that it is replaced with the input
+    key
+
+    """
+    c = 299792458
+    eV = 1.602176634e-19
+    h = 6.62607015e-34
+    axis = data[x]
+    try:
+        result_key = result_key.format(x)
+    except:
+        result_key = result_key
+    data[result_key] = None
+    for i, row in data.iterrows():
+        data.at[i, result_key] = h * c / (row[x] * eV)
+
+
+def center_around_max(data, x='x', y='y', result_key='{}_centered'):
+    """ Shift x,y data so that they are centered around the maximum
+
+
+    @param Dataframe data: The dataframe containing the data
+    @param string x: The x column
+    @param string x: The y column
+    @param string result_key: The name of the output colmun
+
+    By default, the output column is 'XXX_centered'
+    """
+    try:
+        result_key = result_key.format(x)
+    except:
+        result_key = result_key
+    data[result_key] = None
+
+    for i, row in data.iterrows():
+        x_max = row[x][np.argmax(row[y])]
+        data.at[i, result_key] = row[x] - x_max
+
+
+def difference_curves(x1, y1, x2, y2, interpolation='linear'):
+    """ Compute the subtraction of two curves that do not share the same x axis values (2-1)
+
+    @param 1d numpy x1: The x axis of the first curve
+    @param 1d numpy y1: The y axis of the first curve
+    @param 1d numpy x2: The x axis of the second curve
+    @param 1d numpy y2: The y axis of the second curve
+    @param string interpolation: The type of interpolation. Fed to scipy.interpolate.interp1d
+
+
+    The result only exist in the common interval between the two.
+    To compute the result, the curve with denser axis is taken as reference and the less dense is itnerpolated.
+
+    """
+    x_min = max(x1.min(), x2.min())
+    x_max = min(x1.max(), x2.max())
+    x1, y1 = get_window(x1, y1, x_min, x_max)
+    x2, y2 = get_window(x2, y2, x_min, x_max)
+    if len(x1) == 0 or len(x2) == 0:
+        print('Error: The two curves do not share any common interval of definition.')
+        return
+    first_is_denser = len(x1) > len(x2)
+    x_dense, y_dense, x_dilute, y_dilute = (x1, y1, x2, y2) if first_is_denser else (x2, y2, x1, y1)
+    f_dilute_interpolated = scipy.interpolate.interp1d(x_dilute, y_dilute, kind=interpolation, fill_value="extrapolate")
+    result = y_dense - f_dilute_interpolated(x_dense)
+    if first_is_denser:
+        result = -result
+    return x_dense, result
