@@ -332,7 +332,7 @@ def match_columns(df_list, columns=[]):
     return pd.concat(masked, sort=False).reset_index(drop=True)
 
 
-def fit_data(data, function, params, x='x', y='y', verbose=False):
+def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=False):
     """ Use lmfit to automatically fit all the curves of a dataframe based on a param object
 
     @param Dataframe data: The dataframe containing the data
@@ -341,6 +341,7 @@ def fit_data(data, function, params, x='x', y='y', verbose=False):
     @param str x: the name of the x axis
     @param str y: the name of the y axis
     @param bool verbose: Set to true to have the fit report of lmfit of every fit printed
+    @param bool do_not_fit: Set to true to evaluate the initial parameters (for debug)
 
     Note: The function here is minimized, so it has to do the subtraction explicitly.
 
@@ -369,18 +370,23 @@ def fit_data(data, function, params, x='x', y='y', verbose=False):
         data[param] = None
         data['{}_err'.format(param)] = None
     for i, row in data.iterrows():
-        try:
-            result = lmfit.minimize(function, params, args=(row[x], row[y]))
-            if verbose:
-                print(lmfit.fit_report(result))
-            data.at[i, '{}_fitted'.format(y)] = row[y] + result.residual
-            for param in list(params):
-                data.at[i, param] = result.params[param].value
-                data.at[i, '{}_err'.format(param)] = result.params[param].stderr
-            data.at[i, 'fit_success'] = True
-            data.at[i, 'fit_result'] = result
-        except ValueError:
-            pass
+        if do_not_fit:
+            data.at[i, '{}_fitted'.format(y)] = function(params, row[x], 0)
+        else:
+            try:
+                result = lmfit.minimize(function, params, args=(row[x], row[y]))
+                if verbose:
+                    print(lmfit.fit_report(result))
+                data.at[i, '{}_fitted'.format(y)] = row[y] + result.residual
+                for param in list(params):
+                    data.at[i, param] = result.params[param].value
+                    data.at[i, '{}_err'.format(param)] = result.params[param].stderr
+                data.at[i, 'fit_success'] = True
+                data.at[i, 'fit_result'] = result
+            except ValueError:
+                if verbose:
+                    print('Fit "{}" failed.'.format(i))
+
     for param in list(params):
         data[param] = data[param].astype(float)
         data['{}_err'.format(param)] = data['{}_err'.format(param)].astype(float)
