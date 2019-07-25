@@ -289,3 +289,11 @@ def plot_grid(data, lines_key, columns, x_label=None, y_label=None, height_per_l
                 ax.legend(handles, labels, loc="center left", bbox_to_anchor=(1.03, 0, 0.5, 1), fontsize=13, ncol=ncol)
 
     return fig, axes
+
+
+def new_figure(xlabel=None, ylabel=None, figsize=None):
+    """  Helper to create quickly a new plot"""
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    return fig, ax
