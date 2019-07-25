@@ -512,3 +512,36 @@ def difference_curves(x1, y1, x2, y2, interpolation='linear'):
     if first_is_denser:
         result = -result
     return x_dense, result
+
+
+def create_window(data, a, b, x='x', y='y', window_x='window_x', window_y='window_y', shift_x=False):
+    """ Helper function to create two x,y columns around a given window
+
+    @param (float) a: Start of the window
+    @param (float) b: End of the window
+    @param (string) y: The source y column
+    @param (string) x: The source x column
+    @param (string) window_x: The destination x column
+    @param (string) window_y: The destination y column
+    @param (bool) shift_x: Whether to set the start of the new window at 0
+
+
+    """
+    data[window_x] = None
+    data[window_y] = None
+    for i, row in data.iterrows():
+        data.at[i, window_x], data.at[i, window_y] = get_window(row[x], row[y], a, b)
+        if shift_x:
+            data.at[i, window_x] -= data.at[i, window_x].min()
+
+
+def create_prefix_unit(data, key, prefix):
+    """ Helper method to create or update a new columns based on the original times a unit prefix (m, k...) """
+    # The sign is reversed so that a multiplication is used instead of a division
+    # This help prevent round error
+    prefix_db = { 'y': 1e24, 'z':1e21, 'a': 1e18, 'f': 1e15, 'p':1e12, 'n':1e9, 'u':1e6, 'm':1e3,
+                 'k':1e-3, 'M':1e-6, 'G':1e-9, 'T':1e-12, 'P':1e-15, 'E':1e-18, 'Z':1e-21, 'Y':1e-24}
+    if prefix not in prefix_db:
+        print('Error: {} is not a valid prefix'.format(prefix))
+        return
+    data['{}_{}'.format(key, prefix)] = data[key]*prefix_db[prefix]
