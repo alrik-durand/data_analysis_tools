@@ -36,7 +36,10 @@ def get_lifetime_model(number_decay=1, rise_time=False, order_lifetime=False):
     @param (bool) rise_time: Whether to add a rise time to the model or not
     @param (bool) order_lifetime : If true, force the lifetime to be in ascending order
 
+    @return function, params, report_function
+
     sum over i (1 to number_decay) of amplitude_decay_i * exp(-t/lifetime_decay_i)
+
     """
 
     def function(params, t, data):
@@ -59,6 +62,34 @@ def get_lifetime_model(number_decay=1, rise_time=False, order_lifetime=False):
             expr = 'lifetime_decay_{}-lifetime_decay_{}'.format(i, i+1)
             params.add('lifetime_delta_{}'.format(i), value=0, max=0, expr=expr)
 
-    return function, params
+    def report_function(data, row_label=None):
+        """ Return markdown text to print the fit result more easily
+
+        Example :
+            from IPython.display import Markdown as md
+            function, params, report_function = models.get_lifetime_model()
+            dat.fit_data(data, function, params)
+            md(report_function(data, '{poi}'))
+
+        """
+        output_total = ''
+        for i, row in data.iterrows():
+            label = row_label.format(**row.to_dict()) if row_label is not None else i
+            output = '**{}**<br>'.format(label)
+            if not row.amplitude_decay_1 > 0 or row.amplitude_decay_1_err > row.amplitude_decay_1:
+                output += '*Failed* <br>'
+            else:
+                for j in range(number_decay):
+                    output_line = '- {:.0f}% **{:.2f}** $\pm$ {:.1f} ns <br>'
+                    output_line = output_line.format(row['amplitude_decay_{}'.format(j + 1)] * 100,
+                                                     row['lifetime_decay_{}'.format(j + 1)] * 1e9,
+                                                     row['lifetime_decay_{}_err'.format(j + 1)] * 1e9
+                                                     )
+                    output += output_line
+            output_total += output + '<br>'
+        return output_total
+
+
+    return function, params, report_function
 
 
