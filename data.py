@@ -332,7 +332,7 @@ def match_columns(df_list, columns=[]):
     return pd.concat(masked, sort=False).reset_index(drop=True)
 
 
-def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=False):
+def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=False, iterative=False):
     """ Use lmfit to automatically fit all the curves of a dataframe based on a param object
 
     @param Dataframe data: The dataframe containing the data
@@ -342,6 +342,7 @@ def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=Fal
     @param str y: the name of the y axis
     @param bool verbose: Set to true to have the fit report of lmfit of every fit printed
     @param bool do_not_fit: Set to true to evaluate the initial parameters (for debug)
+    @param iterative do_not_fit: Set to true so that initial model for each row is the result of the previous fit
 
     Note: The function here is minimized, so it has to do the subtraction explicitly.
 
@@ -369,20 +370,23 @@ def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=Fal
     for param in list(params):
         data[param] = None
         data['{}_err'.format(param)] = None
+    last_result = None
     for i, row in data.iterrows():
         if do_not_fit:
             data.at[i, '{}_fitted'.format(y)] = function(params, row[x], 0)
         else:
             try:
-                result = lmfit.minimize(function, params, args=(row[x], row[y]))
+                params_to_use = last_result if iterative and last_result is not None  else params
+                result = lmfit.minimize(function, params_to_use, args=(row[x], row[y]))
                 if verbose:
                     print(lmfit.fit_report(result))
                 data.at[i, '{}_fitted'.format(y)] = row[y] + result.residual
-                for param in list(params):
+                for param in list(params_to_use):
                     data.at[i, param] = result.params[param].value
                     data.at[i, '{}_err'.format(param)] = result.params[param].stderr
                 data.at[i, 'fit_success'] = True
                 data.at[i, 'fit_result'] = result
+                last_result = result.params.copy()
             except ValueError:
                 if verbose:
                     print('Fit "{}" failed.'.format(i))
