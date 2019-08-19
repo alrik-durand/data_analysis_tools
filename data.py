@@ -237,7 +237,7 @@ def copy_column_dataframe(df, src, dst):
     for i, row in df.iterrows():
         if (row[dst] is None or (type(row[dst])==float and pd.isnull(row[dst])) ) \
         and (row[src] is not None and not (type(row[src])==float and pd.isnull(row[src])) ):
-            row[dst] = row[src]
+            df.at[i, dst] = row[src]
 
 
 def rebin(data, rebin_ratio, do_average=False):
