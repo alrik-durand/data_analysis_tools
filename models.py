@@ -93,3 +93,19 @@ def get_lifetime_model(number_decay=1, rise_time=False, order_lifetime=False):
     return function, params, report_function
 
 
+def get_dipole_model():
+    """ Define a model to fit dipoles
+
+    @return function, params
+    """
+
+    def function(params, theta, data):
+        model = params['bg'] + params['amplitude'] * np.sin(theta-params['phi'])**2
+        return model - data
+
+    params = lmfit.Parameters()
+    params.add('bg', value=1e3, vary=True)
+    params.add('amplitude', value=20e3, min=0, vary=True)
+    params.add('phi', value=np.pi/4, vary=True)
+
+    return function, params
