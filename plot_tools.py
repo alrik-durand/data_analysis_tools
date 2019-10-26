@@ -158,6 +158,8 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
     @param the name of the column to use as y values
     @param plot_kw: A dictionary passed to the plot function
     @param bool remove_label_doubles: True to prevent multiple occurrences of the same label
+    @param float offset_increment: An offset linear with the number for each curve
+    @param float constant_offset: A constant offset for each curve
     @param dict test_dic: A dictionary of (key, value) to plot only some rows where df[key]=value
 
     @return array of lines created by plot() function
