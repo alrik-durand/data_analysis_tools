@@ -144,7 +144,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
 
 
 def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x', y='y', plot_kw={},
-              remove_label_doubles=True, label=None, offset_increment=0, **test_dic):
+              remove_label_doubles=True, label=None, offset_increment=0, constant_offset=0, **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
     @param Axe ax: The axe object from patplotlib.pyplot
@@ -217,9 +217,9 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             if 'plot_kw' in row.keys() and isinstance(row['plot_kw'], dict):
                 plot_kw_row.update(row['plot_kw'])
             if 'color' in plot_kw:
-                line = ax.plot(x_data, y_data + j * offset_increment, label=label_row, **plot_kw_row)
+                line = ax.plot(x_data, y_data + j * offset_increment + constant_offset, label=label_row, **plot_kw_row)
             else:
-                line = ax.plot(x_data, y_data + j * offset_increment, label=label_row, color=color, **plot_kw_row)
+                line = ax.plot(x_data, y_data + j * offset_increment + constant_offset, label=label_row, color=color, **plot_kw_row)
             j += 1
             lines.append(line)
     return lines
