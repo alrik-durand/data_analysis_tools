@@ -150,7 +150,8 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
     @param Axe ax: The axe object from patplotlib.pyplot
     @param DataFrame df: The dataframe containing the 'x' and 'y' columns
     @param int rebin_ratio: A integer to rebin the data by a certain value
-    @param colors: An array (same length as df) or the name of a column to compute the color based on max
+    @param colors: An the name of a column to compute the color (str or number) or a serie with same index key or a list
+        of colors (str) to loop over
     @param cmap: A color map
     @param (float, float) window: a window (x_min, x_max) to plot only part of the data
     @param the name of the column to use as x values
@@ -191,10 +192,11 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
                 else:
                     n = int(row[colors]/max(df[colors])*256)
                     color = cmap(n)
-            if colors is not None and \
-                    (type(colors) == pd.core.series.Series or type(colors) == list or type(colors) == np.ndarray):
-                n = int(colors[i]/max(colors)*256)
+            if colors is not None and type(colors) == pd.core.series.Series:
+                n = int(colors[i] / max(colors) * 256)
                 color = cmap(n)
+            if colors is not None and type(colors) == list and len(list) != 0:
+                color = colors[j % len(colors)]
             if row.get('color'):
                 color = cmap(row.get('color'))
             if label is not None:
