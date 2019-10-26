@@ -195,7 +195,7 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             if colors is not None and type(colors) == pd.core.series.Series:
                 n = int(colors[i] / max(colors) * 256)
                 color = cmap(n)
-            if colors is not None and type(colors) == list and len(list) != 0:
+            if colors is not None and type(colors) == list and len(colors) != 0:
                 color = colors[j % len(colors)]
             if row.get('color'):
                 color = cmap(row.get('color'))
