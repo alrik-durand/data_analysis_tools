@@ -409,7 +409,7 @@ def clean_traces(data, x_additional_prefix='n', y_additional_prefix='k'):
     data['x'] = None
     data['x_n'] = None
     data['y'] = data['trace'] / (data['sweeps'] * data['binwidth'])
-    data['y_k'] = data['y']*1e3
+    data['y_k'] = data['y']/1e3
     for i, row in data.iterrows():
         data.at[i, 'x'] = np.arange(len(row['trace'])) * row['binwidth']
         data.at[i, 'x_n'] = data.at[i, 'x'] * 1e9
