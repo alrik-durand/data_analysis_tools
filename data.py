@@ -539,6 +539,28 @@ def create_window(data, a, b, x='x', y='y', window_x='window_x', window_y='windo
             data.at[i, window_x] -= data.at[i, window_x].min()
 
 
+def compute_shared_window(curves, interpolation='linear'):
+    """
+    @param curves: a list of curves (2d array (2, Ni) of different sizes)
+    @return: a list of curves on the shared window with all the same x axis
+    """
+    mini_x = np.array([curve[0].min() for curve in curves])
+    maxi_x = np.array([curve[0].max() for curve in curves])
+    x1 = mini_x.max()
+    x2 = maxi_x.min()
+    new_data = [np.array(get_window(curve[0], curve[1], x1, x2)) for curve in curves]
+    sizes = [len(curve[0]) for curve in new_data]
+    if np.min(sizes) == 0:
+        print(sizes)
+        raise ValueError('No shared x axis.')
+    denser_curve = np.argmax(sizes)
+    interpolations = [scipy.interpolate.interp1d(curve[0], curve[1], kind=interpolation, fill_value="extrapolate") for
+                     curve in new_data]
+    x = new_data[denser_curve][0]
+    final_data = [interpolation(x) for interpolation in interpolations]
+    return x, final_data
+
+
 def create_prefix_unit(data, key, prefix):
     """ Helper method to create or update a new columns based on the original times a unit prefix (m, k...) """
     # The sign is reversed so that a multiplication is used instead of a division
