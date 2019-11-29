@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import lmfit
 import scipy
+import ntpath
 
 def get_all_data_files(search_str='', folder=None, file_format='', print_info=False):
     """Search in a folder and its subfolders all the files containing a given string in their name or filepath.
@@ -224,6 +225,29 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
     return df
 
 
+def get_dataframe_from_files(files, additional_dictionary={}):
+    """ Read all the Qudi files in a givne list and return the data parsed as a pandas dataframe
+
+    @param string or list(string) files: files path
+    @param dictionary additional_dictionary: keys and values to add manually to each rows
+
+    If a key is overwritten, the order of importance is : additional_dictionary > data file
+
+    @return pandas.Dataframe: Panda Dataframe containing all the data
+
+    """
+    frames = []
+    for file in files:
+        dictionary = additional_dictionary.copy()
+        dictionary.update({'filepath': ntpath.dirname(file)})
+        dictionary.update({'filename': ntpath.basename(file)})
+        frames.append(
+            get_dataframe_from_file(file, additional_dictionary=dictionary))
+    df = pd.concat(frames, sort=False).reset_index(drop=True)
+    create_timestamp_from_filename(df)
+    return df
+
+
 def copy_column_dataframe(df, src, dst):
     """ Function that copy a column to another if the destination is NaN and the source is not
 
@@ -395,7 +419,6 @@ def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=Fal
     for param in list(params):
         data[param] = data[param].astype(float)
         data['{}_err'.format(param)] = data['{}_err'.format(param)].astype(float)
-
 
 def clean_traces(data, x_additional_prefix='n', y_additional_prefix='k'):
     """ Clean a Qudi Pulsemeasurement raw trace and construct x and y axis
