@@ -220,6 +220,7 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
                 frames.append(
                     get_dataframe_from_file('{}/{}'.format(folder, filename), additional_dictionary=dictionary))
     df = pd.concat(frames, sort=False).reset_index(drop=True)
+    create_timestamp_from_filename(df)
     return df
 
 
@@ -571,3 +572,8 @@ def create_prefix_unit(data, key, prefix):
         print('Error: {} is not a valid prefix'.format(prefix))
         return
     data['{}_{}'.format(key, prefix)] = data[key]*prefix_db[prefix]
+
+def create_timestamp_from_filename(data, filename='filename', timestamp='timestamp'):
+    """ Create a timestamp column from the filename """
+    data[timestamp] = pd.to_datetime(data[filename].str.slice(0, 16), format='%Y%m%d-%H%M-%S')
+
