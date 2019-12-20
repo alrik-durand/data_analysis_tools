@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
+from ipywidgets import interact, interactive, fixed, interact_manual
+import ipywidgets as widgets
 import lmfit
 
 # Fake data generation
@@ -13,9 +15,9 @@ import lmfit
 # fig, ax = plt.subplots(1, figsize=(window_size, window_size/np.sqrt(2)))
 # # plt.subplots_adjust(left=0.25)
 #
-# ax.set_title('Shadocks population when their are pumping')
+# ax.set_title('shadoks population when their are pumping')
 # ax.set_ylabel('Shadoks population')
-# ax.set_xlabel('Time (in shadock day)')
+# ax.set_xlabel('Time (in shadok day)')
 #
 # ax.plot(x, y)
 #
@@ -27,7 +29,7 @@ import lmfit
 # model.set_param_hint('shift', value=0.5, min=0, max=1, vary=True)
 
 
-class Shadocks:
+class Shadoks:
     """ Class to analyse a lmfit model and get nice sliders to play with it
 
     @param (lmfit model) model: The model with param_hint defined with min max and value
@@ -44,9 +46,10 @@ class Shadocks:
     """
     _do_not_update = False
 
-    def __init__(self, model, x=None, y=None, fig=None, ax=None, do_fit=False, resolution=500, plot_kw={}, update_func=None):
+    def __init__(self, function, params, x=None, y=None, fig=None, ax=None, do_fit=False, resolution=500, plot_kw={}, update_func=None):
 
-        self._model = model
+        self._function = function
+        self._params = params
         self._fig = fig if fig is not None else plt.gcf()
         self._ax = ax if ax is not None else plt.gca()
         self._x_range = x[0], x[-1] if x is not None else self._ax.get_xbound()
@@ -62,13 +65,13 @@ class Shadocks:
                 result = self._fit()
                 self._line = self._ax.plot(self._x_axis, self._model.func(self._x_axis, **result.best_values), **plot_kw)[0]
         else:
-            self._line = self._ax.plot(self._x_axis, self._model.func(self._x_axis, **self._get_non_opt()), **plot_kw)[0]
+            self._line = self._ax.plot(self._x_axis, self._function(self._x_axis, **self._get_non_opt()), **plot_kw)[0]
 
-        length = len(model.param_hints)
+        length = len(self._params)
         # Create the window with toolbar disabled
         back_up = mpl.rcParams['toolbar']
         mpl.rcParams['toolbar'] = 'None'
-        self._fig_dynamic = plt.figure(num='Shadock fitting', figsize=(8, .8 * length))
+        self._fig_dynamic = plt.figure(num='shadok fitting', figsize=(8, .8 * length))
         mpl.rcParams['toolbar'] = back_up
         # Create slider
         self._sliders = {}
@@ -126,5 +129,5 @@ class Shadocks:
 
         self._update(0)
 
-# a = Shadocks(model, x, y, fig)
+# a = shadoks(model, x, y, fig)
 # plt.show()

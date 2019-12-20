@@ -7,7 +7,7 @@ import matplotlib.colors as mcolors
 from matplotlib.patches import Polygon
 import data_analysis_tools.data as dat
 import pandas as pd
-
+from collections.abc import Iterable
 
 def set_rc_params(mpl):
     """ Helper method to set the right sizes in matplotlib """
@@ -268,9 +268,15 @@ def plot_grid(data, lines_key, columns, x_label=None, y_label=None, height_per_l
 
     fig, axes = plt.subplots(h, w, figsize=(width_per_column * w, height_per_line * h))
 
+    if h == 1:
+        axes = [axes]
+
     for i, line in enumerate(axes):
         line_value = lines_values[i]
         df = data[data[lines_key] == line_value]
+
+        if not isinstance(line, Iterable):
+            line = [line]
 
         for j, ax in enumerate(line):
             column = columns[j]
