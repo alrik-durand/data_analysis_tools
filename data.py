@@ -357,7 +357,8 @@ def match_columns(df_list, columns=[]):
     return pd.concat(masked, sort=False).reset_index(drop=True)
 
 
-def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=False, iterative=False):
+def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=False, iterative=False,
+             params_initial_values=[]):
     """ Use lmfit to automatically fit all the curves of a dataframe based on a param object
 
     @param Dataframe data: The dataframe containing the data
@@ -368,6 +369,7 @@ def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=Fal
     @param bool verbose: Set to true to have the fit report of lmfit of every fit printed
     @param bool do_not_fit: Set to true to evaluate the initial parameters (for debug)
     @param iterative do_not_fit: Set to true so that initial model for each row is the result of the previous fit
+    @param params_initial_values: an array of (param_name, column_key) to use as initial parameter
 
     Note: The function here is minimized, so it has to do the subtraction explicitly.
 
@@ -401,7 +403,9 @@ def fit_data(data, function, params, x='x', y='y', verbose=False, do_not_fit=Fal
             data.at[i, '{}_fitted'.format(y)] = function(params, row[x], 0)
         else:
             try:
-                params_to_use = last_result if iterative and last_result is not None  else params
+                params_to_use = last_result if iterative and last_result is not None else params
+                for param_name, key in params_initial_values:
+                    params[param_name].value = row[key]
                 result = lmfit.minimize(function, params_to_use, args=(row[x], row[y]))
                 if verbose:
                     print(lmfit.fit_report(result))
