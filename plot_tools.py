@@ -202,9 +202,11 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
                 color = colors[j % len(colors)]
             if row.get('color'):
                 color = cmap(row.get('color'))
-            if label is not None:
+            if label is not None and type(label) == str:
                 row_dict = row.to_dict()
                 label_row = label.format(**row_dict)
+            elif label is not None and type(label) == list:
+                label_row = label[j]
             elif 'label' in row.index:
                 label_row = row['label']
             else:
