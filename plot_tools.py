@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib as mpl
 from matplotlib.patches import Polygon
 import data_analysis_tools.data as dat
 import pandas as pd
