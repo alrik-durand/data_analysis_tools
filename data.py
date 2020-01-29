@@ -209,7 +209,6 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
     for i, folder in enumerate(folders):
         if len(additional_dictionaries) != 0 and len(additional_dictionaries) != len(folders):
             raise ValueError('The additional_dictionaries list must have the same length as the folders list')
-
         if len(additional_dictionaries) != 0:
             dictionary = {**additional_dictionary.copy(), **additional_dictionaries[i]}
         else:

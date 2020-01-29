@@ -144,8 +144,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
 
 
 def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x', y='y', plot_kw={},
-              remove_label_doubles=True, label=None, offset_increment=0, constant_offset=0, multiplier=0,
-              **test_dic):
+              remove_label_doubles=True, label=None, offset_increment=0, offset_increment_x=0, constant_offset=0, **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
     @param Axe ax: The axe object from patplotlib.pyplot
@@ -159,7 +158,8 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
     @param the name of the column to use as y values
     @param plot_kw: A dictionary passed to the plot function
     @param bool remove_label_doubles: True to prevent multiple occurrences of the same label
-    @param float offset_increment: An offset linear with the number for each curve
+    @param float offset_increment: An offset linear with the number for each curve for the y axis
+    @param float offset_increment_x: An offset linear with the number for each curve for the x axis
     @param float constant_offset: A constant offset for each curve
     @param dict test_dic: A dictionary of (key, value) to plot only some rows where df[key]=value
 
@@ -222,9 +222,9 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
             if 'plot_kw' in row.keys() and isinstance(row['plot_kw'], dict):
                 plot_kw_row.update(row['plot_kw'])
             if 'color' in plot_kw:
-                line = ax.plot(x_data, y_data*(1+multiplier*j) + j * offset_increment + constant_offset, label=label_row, **plot_kw_row)
+                line = ax.plot(x_data + j * offset_increment_x, y_data + j * offset_increment + constant_offset, label=label_row, **plot_kw_row)
             else:
-                line = ax.plot(x_data, y_data*(1+multiplier*j) + j * offset_increment + constant_offset, label=label_row, color=color, **plot_kw_row)
+                line = ax.plot(x_data + j * offset_increment_x, y_data + j * offset_increment + constant_offset, label=label_row, color=color, **plot_kw_row)
             j += 1
             lines.append(line)
     return lines
@@ -416,3 +416,65 @@ def gradient_fill_exp(x, y, fill_color=None, ax=None, **kwargs):
 
     ax.autoscale(True)
     return line, im
+
+
+def limits_setting(ax, yinf=None, ysup=None, xinf=None, xsup=None):
+    """ Fixes the limits on a figure.
+    
+    @param Axe ax: The axe object from patplotlib.pyplot
+    @param yinf scalar (optional). The left ylim in data coordinates. None leaves the limit unchanged.
+    @param ysup scalar (optional). The right ylim in data coordinates. None leaves the limit unchanged.
+    @param xinf scalar (optional). Same as yinf but for the x axis. 
+    @param xsup scalar (optional). Same as ysup but for the x axis.
+    
+    """
+    ax.set_ylim(yinf, ysup)
+    ax.set_xlim(xinf, xsup)
+    
+
+def ticks_setting(ax, yinf, ysup, xinf, xsup, yinf_ticks, ysup_ticks, xinf_ticks, xsup_ticks, 
+                         ystep_maj, ystep_min, xstep_maj, xstep_min, no_ticks_y=False, no_ticks_x=False):
+    """ Fixes the ticks on a figure.
+    
+    @param Axe ax: The axe object from patplotlib.pyplot
+    @param yinf_ticks number. Start of interval on which you want the ticks for the y axis. 
+The interval includes this value. The default start value is 0.
+    @param ysup_ticks number. End of interval on which you want the ticks for the y axis.
+The interval does not include this value, except in some cases where step is not an integer and 
+floating point round-off affects the length of out.
+    @param xinf_ticks number. Same as yinf_ticks but for the x axis. 
+    @param xsup_ticks number. Same as ysup_ticks but for the x axis.
+    ---
+    @param ystep_maj number. Spacing between values for the major ticks on y axis.
+For any output out, this is the distance between two adjacent values, out[i+1] - out[i]. 
+The default step size is 1. If step is specified as a position argument, start must also be given.
+    @param ystep_min number. Spacing between values for the major ticks on y axis.
+For any output out, this is the distance between two adjacent values, out[i+1] - out[i]. 
+The default step size is 1. If step is specified as a position argument, start must also be given.
+    @param xstep_maj number. Same as ystep_maj but for the x axis. 
+    @param xstep_min number. Same as ystep_min but for the x axis.
+    ---
+    @param no_ticks_y boolean (optional). Return no ticks on y axis if True. The default value is False.
+    @param no_ticks_x boolean (optional). Same as no_ticks_y but for the x axis.
+
+    """
+    
+    # ----Y axe ticks----
+    if no_ticks_y:
+        ax.yaxis.set_major_locator(mpl.ticker.FixedLocator([]))
+        ax.yaxis.set_minor_locator(mpl.ticker.FixedLocator([]))
+    else:
+        yticks = np.arange(yinf_ticks, ysup_ticks, ystep_min)
+        ax.set_yticks(yticks, minor=True)
+        ax.yaxis.set_major_locator(mpl.ticker.MultipleLocator(ystep_maj))
+        ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(ystep_min))
+
+    # ----X axe ticks----
+    if no_ticks_x:
+        ax.xaxis.set_major_locator(mpl.ticker.FixedLocator([]))
+        ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator([]))
+    else:
+        xticks = np.arange(xinf_ticks, xsup_ticks, xstep_min)
+        ax.set_xticks(xticks, minor=True)
+        ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(xstep_maj))
+        ax.xaxis.set_minor_locator(mpl.ticker.MultipleLocator(xstep_min))
