@@ -80,9 +80,8 @@ def get_lifetime_model(number_decay=1, rise_time=False, order_lifetime=False):
                 output += '*Failed* <br>'
             else:
                 for j in range(number_decay):
-                    output_line = '- {:.0f}% **{:.2f}** $\pm$ {:.1f} ns <br>'
-                    output_line = output_line.format(row['amplitude_decay_{}'.format(j + 1)] * 100,
-                                                     row['lifetime_decay_{}'.format(j + 1)] * 1e9,
+                    output_line = '\u03C4 = **{:.2f}** $\pm$ {:.1f} ns <br>'
+                    output_line = output_line.format(row['lifetime_decay_{}'.format(j + 1)] * 1e9,
                                                      row['lifetime_decay_{}_err'.format(j + 1)] * 1e9
                                                      )
                     output += output_line
