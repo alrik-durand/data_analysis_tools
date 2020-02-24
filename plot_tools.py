@@ -433,27 +433,28 @@ def limits_setting(ax, yinf=None, ysup=None, xinf=None, xsup=None):
     ax.set_xlim(xinf, xsup)
     
 
-def ticks_setting(ax, yinf, ysup, xinf, xsup, yinf_ticks, ysup_ticks, xinf_ticks, xsup_ticks, 
-                         ystep_maj, ystep_min, xstep_maj, xstep_min, no_ticks_y=False, no_ticks_x=False):
+def ticks_setting(ax, yinf_ticks=0, ysup_ticks=1, xinf_ticks=0, xsup_ticks=1, 
+                  ystep_maj=1, ystep_min=1, xstep_maj=1, xstep_min=1, 
+                  no_ticks_y=False, no_ticks_x=False):
     """ Fixes the ticks on a figure.
     
     @param Axe ax: The axe object from patplotlib.pyplot
-    @param yinf_ticks number. Start of interval on which you want the ticks for the y axis. 
+    @param yinf_ticks number (optional). Start of interval on which you want the ticks for the y axis. 
 The interval includes this value. The default start value is 0.
     @param ysup_ticks number. End of interval on which you want the ticks for the y axis.
 The interval does not include this value, except in some cases where step is not an integer and 
 floating point round-off affects the length of out.
-    @param xinf_ticks number. Same as yinf_ticks but for the x axis. 
+    @param xinf_ticks number (optional). Same as yinf_ticks but for the x axis. 
     @param xsup_ticks number. Same as ysup_ticks but for the x axis.
     ---
     @param ystep_maj number. Spacing between values for the major ticks on y axis.
 For any output out, this is the distance between two adjacent values, out[i+1] - out[i]. 
 The default step size is 1. If step is specified as a position argument, start must also be given.
-    @param ystep_min number. Spacing between values for the major ticks on y axis.
+    @param ystep_min number (optional). Spacing between values for the major ticks on y axis.
 For any output out, this is the distance between two adjacent values, out[i+1] - out[i]. 
 The default step size is 1. If step is specified as a position argument, start must also be given.
     @param xstep_maj number. Same as ystep_maj but for the x axis. 
-    @param xstep_min number. Same as ystep_min but for the x axis.
+    @param xstep_min number (optional). Same as ystep_min but for the x axis.
     ---
     @param no_ticks_y boolean (optional). Return no ticks on y axis if True. The default value is False.
     @param no_ticks_x boolean (optional). Same as no_ticks_y but for the x axis.
@@ -462,8 +463,8 @@ The default step size is 1. If step is specified as a position argument, start m
     
     # ----Y axe ticks----
     if no_ticks_y:
-        ax.yaxis.set_major_locator(mpl.ticker.FixedLocator([]))
-        ax.yaxis.set_minor_locator(mpl.ticker.FixedLocator([]))
+        ax.yaxis.set_major_locator(mpl.ticker.NullLocator())
+        ax.yaxis.set_minor_locator(mpl.ticker.NullLocator())
     else:
         yticks = np.arange(yinf_ticks, ysup_ticks, ystep_min)
         ax.set_yticks(yticks, minor=True)
@@ -472,8 +473,8 @@ The default step size is 1. If step is specified as a position argument, start m
 
     # ----X axe ticks----
     if no_ticks_x:
-        ax.xaxis.set_major_locator(mpl.ticker.FixedLocator([]))
-        ax.xaxis.set_minor_locator(mpl.ticker.FixedLocator([]))
+        ax.xaxis.set_major_locator(mpl.ticker.NullLocator())
+        ax.xaxis.set_minor_locator(mpl.ticker.NullLocator())
     else:
         xticks = np.arange(xinf_ticks, xsup_ticks, xstep_min)
         ax.set_xticks(xticks, minor=True)
