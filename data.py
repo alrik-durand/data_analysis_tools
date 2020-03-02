@@ -599,7 +599,47 @@ def create_prefix_unit(data, key, prefix):
         return
     data['{}_{}'.format(key, prefix)] = data[key]*prefix_db[prefix]
 
+
 def create_timestamp_from_filename(data, filename='filename', timestamp='timestamp'):
     """ Create a timestamp column from the filename """
     data[timestamp] = pd.to_datetime(data[filename].str.slice(0, 16), format='%Y%m%d-%H%M-%S')
+
+
+def floor(data, key, result_key='{}_floored', percentile=0):
+    """ Function to set the background of a function to 0.
+
+    @param: (DataFrame) data: The dataframe to operate on
+    @param: (str) key: The field to operate on
+    @param: (str) result_key: The field to write in
+    @param: (float) percentile: The percentile used for evaluating value (0 for min)
+    """
+    try:
+        result_key = result_key.format(key)
+    except:
+        result_key = result_key
+
+    if result_key != key:
+        data[result_key] = None
+    for i, row in data.iterrows():
+        data.at[i, result_key] = row[key] - np.percentile(row[key], percentile)
+
+
+def norm(data, key, result_key='{}_normed', maximum_power=1, mean_power=0):
+    """ Function to set the background of a function to 0.
+
+    @param: (DataFrame) data: The dataframe to operate on
+    @param: (str) key: The field to operate on
+    @param: (str) result_key: The field to write in
+    @param: (float) maximum_power: The power applied to maximum value at denominator
+    @param: (float) mean_power: The power applied to mean value in denominator
+    """
+    try:
+        result_key = result_key.format(key)
+    except:
+        result_key = result_key
+
+    if result_key != key:
+        data[result_key] = None
+    for i, row in data.iterrows():
+        data.at[i, result_key] = row[key] / (row[key].max()**maximum_power * row[key].mean()**mean_power)
 
