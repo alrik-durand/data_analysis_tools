@@ -150,7 +150,7 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
 
     @param Axe ax: The axe object from patplotlib.pyplot
     @param DataFrame df: The dataframe containing the 'x' and 'y' columns
-    @param int rebin_ratio: A integer to rebin the data by a certain value
+    @param int rebin_ratio: A integer to rebin the data by a certain value, a column key
     @param colors: An the name of a column to compute the color (str or number) or a serie with same index key or a list
         of colors (str) to loop over
     @param cmap: A color map
@@ -184,9 +184,9 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
         if row[x] is None or row[y] is None:
             show = False
         if show:
-
-            y_decimated = dat.rebin(row[y], int(rebin_ratio), do_average=True)
-            x_decimated = dat.decimate(row[x], int(rebin_ratio))
+            rebin = int(rebin_ratio) if isinstance(rebin_ratio, (float, int)) else row[rebin_ratio]
+            y_decimated = dat.rebin(row[y], int(rebin), do_average=True)
+            x_decimated = dat.decimate(row[x], int(rebin))
 
             color = None
             cmap = cmap if cmap else plt.cm.viridis

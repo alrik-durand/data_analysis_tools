@@ -99,7 +99,7 @@ def get_dipole_model():
     """
 
     def function(params, theta, data):
-        model = params['bg'] + params['amplitude'] * np.sin(theta-params['phi'])**2
+        model = params['bg'] + params['amplitude'] * np.cos(theta-params['phi'])**2
         return model - data
 
     params = lmfit.Parameters()

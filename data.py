@@ -96,10 +96,11 @@ def get_all_data_folders(search_str='', folder=None, file_format='', print_info=
     return valid_folders
 
 
-def read_data_file(filename):
+def read_data_file(filename, filters=[]):
     """ Read a Qudi data file and return the data parsed
 
     @param string filename: the file to read
+    @param list(function) filters: list of functions to filter - return None if filtered out
 
     @return tuple dict(parameters), list(columns), numpy_2d_array(data)
     """
@@ -124,6 +125,10 @@ def read_data_file(filename):
         last_line = line
         line = file.readline()
 
+    for filter in filters: # If the filter applied on the parameters return False, do not load
+        if not filter(parameters):
+            return None
+
     columns = last_line.split('\t')
     if columns[-1] == '\n':  # remove this small artefect if present
         columns = columns[:-1]
@@ -139,17 +144,21 @@ def read_data_file(filename):
     return parameters, columns, data
 
 
-def get_series_from_file(filename, additional_dictionary={}):
+def get_series_from_file(filename, additional_dictionary={}, filters=[]):
     """ Read a Qudi data file and return the data parsed as a pandas series
 
     @param string filename: the file to read
     @param dictionary additional_dictionary: keys and values to add manually to the series
+    @param list(function) filters: list of functions to filter - return None if filtered out
 
 
     @return pandas.Series: Panda series containting the parameters and data columns and their values
 
     """
-    parameters, columns, data = read_data_file(filename)
+    parsed = read_data_file(filename, filters=filters)
+    if parsed is None:
+        return None
+    parameters, columns, data = parsed
     dictionary = {}
     if len(columns) != len(data):
         columns = np.arange(len(data))
@@ -166,18 +175,22 @@ def get_series_from_file(filename, additional_dictionary={}):
     return df
 
 
-def get_dataframe_from_file(filename, additional_dictionary={}):
+def get_dataframe_from_file(filename, additional_dictionary={}, filters=[]):
     """ Read a Qudi data file and return the data parsed as a pandas dataframe
 
     @param string filename: the file to read
     @param dictionary additional_dictionary: keys and values to add manually to the dataframe
+    @param list(function) filters: list of functions to filter - return None if filtered out
 
 
     @return pandas.Series: Panda dataframe containting one row, the parameters and data columns and its values
 
     """
-    df = get_series_from_file(filename, additional_dictionary=additional_dictionary).to_frame().transpose()
-    return df
+    series = get_series_from_file(filename, additional_dictionary=additional_dictionary, filters=filters)
+    if series is not None:
+        return series.to_frame().transpose()
+    else:
+        return None
 
 
 def get_dataframe_from_folders(folders, file_format='.dat', search_str='', additional_dictionary={},
@@ -224,11 +237,12 @@ def get_dataframe_from_folders(folders, file_format='.dat', search_str='', addit
     return df
 
 
-def get_dataframe_from_files(files, additional_dictionary={}):
+def get_dataframe_from_files(files, additional_dictionary={}, filters=[]):
     """ Read all the Qudi files in a givne list and return the data parsed as a pandas dataframe
 
     @param string or list(string) files: files path
     @param dictionary additional_dictionary: keys and values to add manually to each rows
+    @param list(function) filters: list of functions to filter out files during loading
 
     If a key is overwritten, the order of importance is : additional_dictionary > data file
 
@@ -240,8 +254,9 @@ def get_dataframe_from_files(files, additional_dictionary={}):
         dictionary = additional_dictionary.copy()
         dictionary.update({'filepath': ntpath.dirname(file)})
         dictionary.update({'filename': ntpath.basename(file)})
-        frames.append(
-            get_dataframe_from_file(file, additional_dictionary=dictionary))
+        df = get_dataframe_from_file(file, additional_dictionary=dictionary, filters=filters)
+        if df is not None:
+            frames.append(df)
     df = pd.concat(frames, sort=False).reset_index(drop=True)
     create_timestamp_from_filename(df)
     return df
@@ -605,6 +620,18 @@ def create_timestamp_from_filename(data, filename='filename', timestamp='timesta
     data[timestamp] = pd.to_datetime(data[filename].str.slice(0, 16), format='%Y%m%d-%H%M-%S')
 
 
+def convert_filename_to_timestamp(filename):
+    """ Get the timestamp of a a file/pathfile based on its name
+
+    @param (str) filename: The file name or path
+
+    @return: The timestamp with day and time
+
+    Example : '../../Data/2020\01\20290101\Counter\20200101-1234-45_count_trace.dat'
+              '20200101-1234-45_count_trace.dat"
+    """
+    return pd.to_datetime(filename.split('\\')[-1].split('/')[-1][0:16], format='%Y%m%d-%H%M-%S')
+
 def floor(data, key, result_key='{}_floored', percentile=0):
     """ Function to set the background of a function to 0.
 
@@ -613,18 +640,14 @@ def floor(data, key, result_key='{}_floored', percentile=0):
     @param: (str) result_key: The field to write in
     @param: (float) percentile: The percentile used for evaluating value (0 for min)
     """
-    try:
-        result_key = result_key.format(key)
-    except:
-        result_key = result_key
-
+    result_key = result_key.format(key) if '{}' in result_key else result_key
     if result_key != key:
         data[result_key] = None
     for i, row in data.iterrows():
         data.at[i, result_key] = row[key] - np.percentile(row[key], percentile)
 
 
-def norm(data, key, result_key='{}_normed', maximum_power=1, mean_power=0):
+def norm(data, key, result_key='{}_normed', maximum_power=1, mean_power=0, rebin_before_max=1):
     """ Function to set the background of a function to 0.
 
     @param: (DataFrame) data: The dataframe to operate on
@@ -632,14 +655,33 @@ def norm(data, key, result_key='{}_normed', maximum_power=1, mean_power=0):
     @param: (str) result_key: The field to write in
     @param: (float) maximum_power: The power applied to maximum value at denominator
     @param: (float) mean_power: The power applied to mean value in denominator
+    @param: (float) rebin_before_max: A number to rebin before taking the max value
     """
-    try:
-        result_key = result_key.format(key)
-    except:
-        result_key = result_key
 
+    result_key = result_key.format(key) if '{}' in result_key else result_key
     if result_key != key:
         data[result_key] = None
     for i, row in data.iterrows():
-        data.at[i, result_key] = row[key] / (row[key].max()**maximum_power * row[key].mean()**mean_power)
+        maxi = rebin(row[key], rebin_before_max, do_average=True).max()
+        data.at[i, result_key] = row[key] / (maxi**maximum_power * row[key].mean()**mean_power)
 
+def shift_key(data, key, shift, shift_counter='{}_shift', shift_once=True):
+    """ Function to easily shift a field while keeping track of the changes
+
+    @param: (DataFrame) data: The dataframe to operate on
+    @param: (str) key: The field to operate on
+    @param: (str) shift: The shift to apply
+    @param: (str) shift_counter: A field keeping track of the applied shift
+    @param: (bool) shift_once: If a shift of this value already is already present in shift_counter, do nothing
+
+    """
+    shift_counter = shift_counter.format(key) if '{}' in shift_counter else shift_counter
+    if data.get(shift_counter) is None:
+        data[shift_counter]=0
+    for i, row in data.iterrows():
+        current = row.get(shift_counter)
+        if current is None or np.isnan(current):
+            current = 0
+        if current != shift or (not shift_once):
+            data.at[i, key] += shift
+            data.at[i, shift_counter] = current + shift
