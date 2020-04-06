@@ -144,7 +144,7 @@ def plot_dataframe(df, x_key='x', y_key='y', ax=None, rebin_integer=1, **kw):
     return lines
 
 
-def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x', y='y', plot_kw={},
+def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, cmap_lim=(None, None),  window=None, x='x', y='y', plot_kw={},
               remove_label_doubles=True, label=None, offset_increment=0, offset_increment_x=0, constant_offset=0, **test_dic):
     """ Helper function to plot PL traces of a dataframe
 
@@ -154,6 +154,7 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
     @param colors: An the name of a column to compute the color (str or number) or a serie with same index key or a list
         of colors (str) to loop over
     @param cmap: A color map
+    @param tuple(float, float) cmap_lim: The maximum numbers represented on the cmap
     @param (float, float) window: a window (x_min, x_max) to plot only part of the data
     @param the name of the column to use as x values
     @param the name of the column to use as y values
@@ -194,7 +195,10 @@ def plot_data(ax, df, rebin_ratio=1, colors=None, cmap=None, window=None, x='x',
                 if type(row[colors])==str:
                     color = row[colors]
                 else:
-                    n = int(row[colors]/max(df[colors])*256)
+                    c_min, c_max = cmap_lim
+                    c_min = c_min if c_min is not None else min(df[colors])
+                    c_max = c_max if c_max is not None else max(df[colors])
+                    n = int((row[colors]-c_min)/(c_max-c_min)*256)
                     color = cmap(n)
             if colors is not None and type(colors) == pd.core.series.Series:
                 n = int(colors[i] / max(colors) * 256)
