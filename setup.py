@@ -5,8 +5,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="data_analysis_tools",
-    packages=['data_analysis_tools'],
-    version="0.0.2",
+    packages=setuptools.find_packages(),
+    version="0.0.3",
     license='GPLv3',
     author="Alrik Durand",
     author_email="alrik.durand@gmail.com",
