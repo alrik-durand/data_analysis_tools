@@ -685,3 +685,58 @@ def shift_key(data, key, shift, shift_counter='{}_shift', shift_once=True):
         if current != shift or (not shift_once):
             data.at[i, key] += shift
             data.at[i, shift_counter] = current + shift
+
+
+def fit_the_fit(data, model, params, x, y, verbose=True, do_not_fit=False,
+                ax=None, errorbar_kw={}, plot_kw={}, std_factor=1, x_unit='', y_unit=''):
+    """ Fit the parameters extracted from fit_data
+
+    @param (pd.Dataframe) data: The dataframe containing the data
+    @param (Function) model: The function used to fit. See example below
+    @param (lmfit.Parameters) params: The lmfit parameters object defining the variables
+    @param (str) x: the name of the x column
+    @param (str) y: the name of the y column
+    @param (bool) verbose: Set to true to have the fit report of lmfit printed
+    @param (bool) do_not_fit: Set to true to evaluate the initial parameters (for debug)
+
+    @param (ax) ax: The ax to plot the result to (optional)
+    @param (dict) errorbar_kw: The parameters passed to ax.errorbar (measured data)
+    @param (dict) plot_kw: The parameters passed to ax.plot (fit)
+    @param (float) std_factor: The number of standard deviation to show
+    @param (str) x_unit: The unit to show x in
+    @param (str) y_unit: The unit to show y in
+
+    It is often needed to use the values extracted from a fit as input to a fit over the whole dataframe.
+    For example if each row correspond to temperature, then one can try to fit a given parameter of the fit (for
+    example amplitude) vs temperature against a given model.
+    One also often wants to plot the data with error bar and the fits. This can be done by using the ax parameter as
+    well as kw plotting parameters.
+
+    The x_unit can be specified as 'G' or 'n' so that values are multiples to match the unit.
+
+     """
+    x_data = data[x].astype(float).values
+    y_data = data[y].astype(float).values
+    yerr_data = data['{}_err'.format(y)].astype(float).values
+    x_fit = np.linspace(x_data.min(), x_data.max(), num=1000)
+    if not do_not_fit:
+        result = lmfit.minimize(model, params, args=(x_data, y_data))
+        y_fit = model(result.params, x_fit, 0)
+    else:
+        y_fit = model(params, x_fit, 0)
+
+    prefix_db = {'y': 1e24, 'z': 1e21, 'a': 1e18, 'f': 1e15, 'p': 1e12, 'n': 1e9, 'u': 1e6, 'm': 1e3, '': 1,
+                 'k': 1e-3, 'M': 1e-6, 'G': 1e-9, 'T': 1e-12, 'P': 1e-15, 'E': 1e-18, 'Z': 1e-21, 'Y': 1e-24}
+
+    if ax is not None:
+        errorbar_params = dict(marker='o', markersize=3, elinewidth=1, capsize=2, linestyle='None', linewidth=1)
+        errorbar_params.update(errorbar_kw)
+        ax.errorbar(x_data * prefix_db[x_unit], y_data * prefix_db[y_unit],
+                    yerr=std_factor * yerr_data * prefix_db[y_unit],
+                    **errorbar_params)
+        ax.plot(x_fit * prefix_db[x_unit], y_fit * prefix_db[y_unit], **plot_kw)
+
+    if verbose and not do_not_fit:
+        lmfit.report_fit(result)
+
+    return result, (x_fit, y_fit)
