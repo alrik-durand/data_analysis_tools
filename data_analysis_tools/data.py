@@ -740,3 +740,54 @@ def fit_the_fit(data, model, params, x, y, verbose=True, do_not_fit=False,
         lmfit.report_fit(result)
 
     return result, (x_fit, y_fit)
+
+
+#  Todo: test this properly
+def correct_for_apd_deadtime(data, deadtime, x='x', y='y', result_x_key='{}_corrected', result_y_key='{}_corrected',
+                           rebin_before_correction=1):
+
+    result_x_key = result_x_key.format(x) if '{}' in result_x_key else result_x_key
+    result_y_key = result_y_key.format(y) if '{}' in result_y_key else result_y_key
+    if result_x_key != x:
+        data[result_x_key] = None
+    if result_y_key != y:
+        data[result_y_key] = None
+
+    for i, row in data.iterrows():
+        x, y = rebin_xy(row.x, row.y, rebin_before_correction)
+        binwidth = row.binwidth * rebin_before_correction
+
+        x_treated = x.copy()
+        y_treated = y.copy()
+        shift = int(deadtime / binwidth)
+
+        for j in range(len(y)):
+            y_treated[j+1:j+shift] *= 1/(1-y[j] *binwidth)
+
+        data.at[i, result_x_key] = x_treated
+        data.at[i, result_y_key] = y_treated
+
+
+def fit_the_dataframe(df, model, params, x='x', y='y', key_parameters=[], do_not_fit=False):
+    def residual_function(params):
+        residuals = []
+        for i, row in df.iterrows():
+            for key, parameter in key_parameters:
+                params[parameter].value = row[key]
+            residuals.append(model(params, row[x]) - row[y])
+        return np.array(residuals).ravel()
+
+    if do_not_fit:
+        result = None
+        params_end = params
+    else:
+        result = lmfit.minimize(residual_function, params)
+        params_end = result.params
+
+    df['{}_fitted'.format(y)] = None
+    for i, row in df.iterrows():
+        for key, parameter in key_parameters:
+            params_end[parameter].value = row[key]
+        df.at[i, '{}_fitted'.format(y)] = model(params_end, row[x])
+
+    return result
